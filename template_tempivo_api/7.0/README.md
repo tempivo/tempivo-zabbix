@@ -9,15 +9,20 @@ Template to pull **water and ambient temperature**, **humidity** (when enabled i
 | `Tempivo: Get assets (JSON)` | HTTP poll every 5 minutes |
 | `Tempivo: Get alerts (JSON)` | HTTP poll every 5 minutes |
 | `Tempivo: Open alerts count` | Non-resolved alerts for the org |
-| `Asset {name}: Water temperature` | `lastWaterTemperature` (°C) |
-| `Asset {name}: Ambient temperature` | `lastAmbientTemperature` — **no data** if not enabled for the org/device |
-| `Asset {name}: Relative humidity` | `lastRelativeHumidity` (%) — **no data** if not enabled |
-| `Asset {name}: Status` | `online` / `offline` / `low_battery` / `alarm` (value mappings for display) |
-| `Asset {name}: Open alerts` | Count of open alerts for that asset |
 | `Alert {type} [{id}]: …` | Per open alert: severity, status, details (LLD; severity/status use value mappings) |
-| Triggers | API nodata, org/asset open alerts, critical/high alert severity, asset offline |
-| Graphs | Per asset: water + ambient temp, humidity, open alerts; org-wide open alert count |
-| Dashboard **Tempivo** | Pages **Sensors** (temperature/humidity graphs) and **Alerts** |
+| Triggers | API nodata, org open alerts, critical/high alert severity |
+| Graphs | Org-wide open alert count |
+| Dashboard **Tempivo** (org host) | **Alerts** — open alerts in organization |
+
+**On each discovered asset host** (template **Tempivo asset by HTTP**):
+
+| Item | Meaning |
+|------|---------|
+| `Water temperature` / `Ambient temperature` / `Relative humidity` | From `GET /assets/{id}` |
+| `Status` | `online` / `offline` / … (value mapping **Tempivo asset status**) |
+| Triggers | Asset API nodata, asset offline |
+| Graphs | Water + ambient temp, humidity |
+| Dashboard **Tempivo asset** | Sensor graphs |
 
 No SNMP on devices. No agent on sensors. Zabbix server (or proxy) calls Tempivo REST API.
 
@@ -25,10 +30,12 @@ No SNMP on devices. No agent on sensors. Zabbix server (or proxy) calls Tempivo 
 
 | Host | Role |
 |------|------|
-| **Organization host** (you create) | Links **Tempivo by HTTP**; polls `/assets` and `/alerts`; dashboards and org-wide items |
-| **Discovered asset hosts** (automatic) | One host per sensor via **host prototypes**; links **Tempivo asset by HTTP**; per-sensor graphs |
+| **Organization host** (you create) | Links **Tempivo by HTTP**; polls `/assets` (discovery) and `/alerts`; org dashboard and alert LLD |
+| **Discovered asset hosts** (automatic) | One host per sensor via **host prototypes**; links **Tempivo asset by HTTP**; one `GET /assets/{id}` per host for metrics |
 
-Asset hosts are in **Discovered hosts** and per-sensor groups **Tempivo/{asset name}** after *Tempivo assets* discovery runs.
+Set `{$TEMPIVO.ORG.ID}` on the organization host to a short unique label (e.g. building code). Discovered hosts are named `tempivo-{$TEMPIVO.ORG.ID}-{#ASSETID}` so multiple Tempivo orgs in one Zabbix do not collide.
+
+Asset hosts are in **Discovered hosts** and groups **Tempivo/{org id}/{asset name}** after *Tempivo assets* discovery runs.
 
 ## Prerequisites
 
@@ -49,11 +56,12 @@ Follow [Importing templates](https://www.zabbix.com/documentation/current/en/man
 7. Create a host, e.g. `Tempivo – {organization name}` (one host per Tempivo org).
 8. **Data collection → Templates** → link **Tempivo by HTTP** to that host (or add the template on the host’s **Templates** tab).
 9. On the host, set macros (host-level overrides template defaults):
+   - `{$TEMPIVO.ORG.ID}` = short unique id for this org (e.g. `hq` or `building-a`)
    - `{$TEMPIVO.API.BASEURL}` = `https://api.tempivo.com/v1`
    - `{$TEMPIVO.API.KEY}` = your `sk_live_…` key (use **Secret** macro type in the UI)
-10. Wait for discovery (up to 1 h) or **Execute now** on discovery rule *Tempivo assets* (creates per-asset items **and** per-asset hosts).
-11. **Data collection → Hosts** — filter **Discovered hosts** or search `Tempivo` to see discovered sensor hosts.
-12. **Monitoring → Latest data** — organization host: `tempivo.asset` / `tempivo.alert`; asset host: `tempivo.asset.water_temp`, etc.
+10. Wait for discovery (up to 1 h) or **Execute now** on discovery rule *Tempivo assets* (creates per-asset hosts).
+11. **Data collection → Hosts** — filter **Discovered hosts** or search `tempivo-` to see discovered sensor hosts.
+12. **Monitoring → Latest data** — organization host: `tempivo.alert` / alert LLD; asset hosts: `tempivo.asset.water_temp`, etc.
 13. Run discovery **Tempivo open alerts** if you need per-alert items immediately.
 
 ### Validate the YAML file
