@@ -28,7 +28,7 @@ No SNMP on devices. No agent on sensors. Zabbix server (or proxy) calls Tempivo 
 | **Organization host** (you create) | Links **Tempivo by HTTP**; polls `/assets` and `/alerts`; dashboards and org-wide items |
 | **Discovered asset hosts** (automatic) | One host per sensor via **host prototypes**; links **Tempivo asset by HTTP**; per-sensor graphs |
 
-Asset hosts appear under host group **Tempivo/assets** after discovery runs on the organization host.
+Asset hosts are in **Discovered hosts** and **Tempivo/assets** (created by discovery) after *Tempivo assets* discovery runs.
 
 ## Prerequisites
 
