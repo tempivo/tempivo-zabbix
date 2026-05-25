@@ -53,13 +53,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: Get changed files
-        id: changed-files
-        uses: tj-actions/changed-files@v46
-        with:
-          json: true
-          escape_json: false
-          write_output_files: true
 
       - name: Install python3
         run: |
@@ -68,6 +61,4 @@ jobs:
           pip3 install -r .github/workflows/scripts/requirements.txt
 
       - name: Run checks
-        run: |
-          sed -i 's/\\//g' .github/outputs/all_changed_files.json
-          python3 .github/workflows/scripts/check_rules_pr.py
+        run: python3 .github/workflows/scripts/check_rules_all.py
