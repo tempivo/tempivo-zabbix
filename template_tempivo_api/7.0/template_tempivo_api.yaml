@@ -302,7 +302,7 @@ zabbix_export:
                   item:
                     host: 'Tempivo by HTTP'
                     key: 'tempivo.asset.ambient_temp[{#ASSETID}]'
-            - uuid: c9a5f3b20d4e5a7f9b2c1d3e4f5a6b72
+            - uuid: 23578456dab04b4eb28a0003a7ab3bde
               name: 'Asset {#ASSETNAME}: Relative humidity'
               graph_items:
                 - drawtype: GRADIENT_LINE
@@ -310,7 +310,7 @@ zabbix_export:
                   item:
                     host: 'Tempivo by HTTP'
                     key: 'tempivo.asset.humidity[{#ASSETID}]'
-            - uuid: d0b6a4c31e5f6b8a0c3d2e4f5a6b7c83
+            - uuid: ac2b2afe92f2478db763cd33ea5e6581
               name: 'Asset {#ASSETNAME}: Open alerts'
               graph_items:
                 - drawtype: GRADIENT_LINE
@@ -443,7 +443,7 @@ zabbix_export:
               priority: HIGH
               description: 'Tempivo alert with high severity is open.'
       dashboards:
-        - uuid: f2d8c6e53a7b9c0d1e2f3a4b5c6d7e05
+        - uuid: dbf47deddab44dae893dca78f69c7daa
           name: Tempivo
           pages:
             - name: Sensors
@@ -560,7 +560,7 @@ zabbix_export:
           value: ''
           description: 'Bearer API key from Integrations (set on the host after import).'
   graphs:
-    - uuid: e1c7b5d42f6a8b9c0d1e2f3a4b5c6d94
+    - uuid: 4fa7ee7f06c54dbda3bfd55c48abc535
       name: 'Tempivo: Open alerts in organization'
       graph_items:
         - drawtype: GRADIENT_LINE
