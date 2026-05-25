@@ -1,6 +1,5 @@
 zabbix_export:
   version: '7.0'
-  date: '2026-05-25T12:00:00Z'
   template_groups:
     - uuid: f8e7d6c5b4a341209876543210abcd01
       name: Templates/Applications
