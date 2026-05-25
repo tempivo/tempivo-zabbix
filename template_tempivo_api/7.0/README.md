@@ -16,6 +16,8 @@ Template to pull **water and ambient temperature**, **humidity** (when enabled i
 | `Asset {name}: Open alerts` | Count of open alerts for that asset |
 | `Alert {type} [{id}]: …` | Per open alert: severity, status, details (LLD; severity/status use value mappings) |
 | Triggers | API nodata, org/asset open alerts, critical/high alert severity, asset offline |
+| Graphs | Per asset: water + ambient temp, humidity, open alerts; org-wide open alert count |
+| Dashboard **Tempivo** | Pages **Sensors** (temperature/humidity graphs) and **Alerts** |
 
 No SNMP on devices. No agent on sensors. Zabbix server (or proxy) calls Tempivo REST API.
 

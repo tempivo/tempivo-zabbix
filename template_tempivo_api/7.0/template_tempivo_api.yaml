@@ -287,6 +287,37 @@ zabbix_export:
               name: 'Asset {#ASSETNAME}: Open Tempivo alert(s)'
               priority: HIGH
               description: 'One or more non-resolved alerts exist for this asset in Tempivo.'
+          graph_prototypes:
+            - uuid: b8f4e2a19c3d4f6e8a1b0c2d3e4f5a61
+              name: 'Asset {#ASSETNAME}: Water and ambient temperature'
+              graph_items:
+                - drawtype: GRADIENT_LINE
+                  color: 199C0D
+                  item:
+                    host: 'Tempivo by HTTP'
+                    key: 'tempivo.asset.water_temp[{#ASSETID}]'
+                - sortorder: '1'
+                  drawtype: GRADIENT_LINE
+                  color: F7941D
+                  item:
+                    host: 'Tempivo by HTTP'
+                    key: 'tempivo.asset.ambient_temp[{#ASSETID}]'
+            - uuid: c9a5f3b20d4e5a7f9b2c1d3e4f5a6b72
+              name: 'Asset {#ASSETNAME}: Relative humidity'
+              graph_items:
+                - drawtype: GRADIENT_LINE
+                  color: 6C59DC
+                  item:
+                    host: 'Tempivo by HTTP'
+                    key: 'tempivo.asset.humidity[{#ASSETID}]'
+            - uuid: d0b6a4c31e5f6b8a0c3d2e4f5a6b7c83
+              name: 'Asset {#ASSETNAME}: Open alerts'
+              graph_items:
+                - drawtype: GRADIENT_LINE
+                  color: F63100
+                  item:
+                    host: 'Tempivo by HTTP'
+                    key: 'tempivo.asset.alerts.open[{#ASSETID}]'
         - uuid: 0dc50606f75b481785837c8b5e23639a
           name: 'Tempivo open alerts'
           type: DEPENDENT
@@ -411,6 +442,82 @@ zabbix_export:
               name: 'Alert {#ALERTTYPE} [{#ALERTID}]: High severity'
               priority: HIGH
               description: 'Tempivo alert with high severity is open.'
+      graphs:
+        - uuid: e1c7b5d42f6a8b9c0d1e2f3a4b5c6d94
+          name: 'Tempivo: Open alerts in organization'
+          graph_items:
+            - drawtype: GRADIENT_LINE
+              color: F63100
+              item:
+                host: 'Tempivo by HTTP'
+                key: tempivo.alerts.open.count
+      dashboards:
+        - uuid: f2d8c6e53a7b9c0d1e2f3a4b5c6d7e05
+          name: Tempivo
+          pages:
+            - name: Sensors
+              widgets:
+                - type: graphprototype
+                  width: '72'
+                  height: '8'
+                  fields:
+                    - type: INTEGER
+                      name: columns
+                      value: '2'
+                    - type: GRAPH_PROTOTYPE
+                      name: graphid.0
+                      value:
+                        host: 'Tempivo by HTTP'
+                        name: 'Asset {#ASSETNAME}: Water and ambient temperature'
+                    - type: STRING
+                      name: reference
+                      value: TEMPA
+                - type: graphprototype
+                  'y': '8'
+                  width: '72'
+                  height: '5'
+                  fields:
+                    - type: INTEGER
+                      name: columns
+                      value: '2'
+                    - type: GRAPH_PROTOTYPE
+                      name: graphid.0
+                      value:
+                        host: 'Tempivo by HTTP'
+                        name: 'Asset {#ASSETNAME}: Relative humidity'
+                    - type: STRING
+                      name: reference
+                      value: TEMPB
+            - name: Alerts
+              widgets:
+                - type: graph
+                  width: '72'
+                  height: '5'
+                  fields:
+                    - type: GRAPH
+                      name: graphid.0
+                      value:
+                        host: 'Tempivo by HTTP'
+                        name: 'Tempivo: Open alerts in organization'
+                    - type: STRING
+                      name: reference
+                      value: TEMPC
+                - type: graphprototype
+                  'y': '5'
+                  width: '72'
+                  height: '5'
+                  fields:
+                    - type: INTEGER
+                      name: columns
+                      value: '2'
+                    - type: GRAPH_PROTOTYPE
+                      name: graphid.0
+                      value:
+                        host: 'Tempivo by HTTP'
+                        name: 'Asset {#ASSETNAME}: Open alerts'
+                    - type: STRING
+                      name: reference
+                      value: TEMPD
       valuemaps:
         - uuid: 08423e725e48425595250f997a79a06d
           name: 'Tempivo asset status'
