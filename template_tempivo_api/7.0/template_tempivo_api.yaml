@@ -442,15 +442,6 @@ zabbix_export:
               name: 'Alert {#ALERTTYPE} [{#ALERTID}]: High severity'
               priority: HIGH
               description: 'Tempivo alert with high severity is open.'
-      graphs:
-        - uuid: e1c7b5d42f6a8b9c0d1e2f3a4b5c6d94
-          name: 'Tempivo: Open alerts in organization'
-          graph_items:
-            - drawtype: GRADIENT_LINE
-              color: F63100
-              item:
-                host: 'Tempivo by HTTP'
-                key: tempivo.alerts.open.count
       dashboards:
         - uuid: f2d8c6e53a7b9c0d1e2f3a4b5c6d7e05
           name: Tempivo
@@ -568,3 +559,12 @@ zabbix_export:
           type: SECRET_TEXT
           value: ''
           description: 'Bearer API key from Integrations (set on the host after import).'
+  graphs:
+    - uuid: e1c7b5d42f6a8b9c0d1e2f3a4b5c6d94
+      name: 'Tempivo: Open alerts in organization'
+      graph_items:
+        - drawtype: GRADIENT_LINE
+          color: F63100
+          item:
+            host: 'Tempivo by HTTP'
+            key: tempivo.alerts.open.count
