@@ -82,7 +82,7 @@ Use clear **asset names** in Tempivo (building, floor, outlet). They appear as `
 
 - [ ] Pagination for large estates
 - [ ] `lastReadingAt` / stale-data triggers
-- [ ] PR to [zabbix/community-templates](https://github.com/zabbix/community-templates)
+- [x] PR to [zabbix/community-templates](https://github.com/zabbix/community-templates/pull/716)
 
 ## Other ways to integrate
 
