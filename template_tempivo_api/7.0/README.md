@@ -12,9 +12,9 @@ Template to pull **water and ambient temperature**, **humidity** (when enabled i
 | `Asset {name}: Water temperature` | `lastWaterTemperature` (°C) |
 | `Asset {name}: Ambient temperature` | `lastAmbientTemperature` — **no data** if not enabled for the org/device |
 | `Asset {name}: Relative humidity` | `lastRelativeHumidity` (%) — **no data** if not enabled |
-| `Asset {name}: Status` | `online` / `offline` / `low_battery` / `alarm` |
+| `Asset {name}: Status` | `online` / `offline` / `low_battery` / `alarm` (value mappings for display) |
 | `Asset {name}: Open alerts` | Count of open alerts for that asset |
-| `Alert {type} [{id}]: …` | Per open alert: severity, status, details (LLD) |
+| `Alert {type} [{id}]: …` | Per open alert: severity, status, details (LLD; severity/status use value mappings) |
 | Triggers | API nodata, org/asset open alerts, critical/high alert severity, asset offline |
 
 No SNMP on devices. No agent on sensors. Zabbix server (or proxy) calls Tempivo REST API.

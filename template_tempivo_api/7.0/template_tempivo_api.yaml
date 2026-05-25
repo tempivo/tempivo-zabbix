@@ -232,6 +232,8 @@ zabbix_export:
               trends: '0'
               value_type: CHAR
               description: 'online, offline, low_battery, or alarm.'
+              valuemap:
+                name: 'Tempivo asset status'
               master_item:
                 key: tempivo.assets.get
               preprocessing:
@@ -322,6 +324,8 @@ zabbix_export:
               trends: '0'
               value_type: CHAR
               description: 'Alert severity (critical, high, medium, low).'
+              valuemap:
+                name: 'Tempivo alert severity'
               master_item:
                 key: tempivo.alerts.get
               preprocessing:
@@ -349,6 +353,8 @@ zabbix_export:
               trends: '0'
               value_type: CHAR
               description: 'Alert workflow status (new, assigned, acknowledged, resolved).'
+              valuemap:
+                name: 'Tempivo alert status'
               master_item:
                 key: tempivo.alerts.get
               preprocessing:
@@ -405,6 +411,48 @@ zabbix_export:
               name: 'Alert {#ALERTTYPE} [{#ALERTID}]: High severity'
               priority: HIGH
               description: 'Tempivo alert with high severity is open.'
+      valuemaps:
+        - uuid: 08423e725e48425595250f997a79a06d
+          name: 'Tempivo asset status'
+          mappings:
+            - value: online
+              newvalue: Online
+            - value: offline
+              newvalue: Offline
+            - value: low_battery
+              newvalue: 'Low battery'
+            - value: alarm
+              newvalue: Alarm
+            - value: archived
+              newvalue: Archived
+            - value: unknown
+              newvalue: Unknown
+        - uuid: e780c228b8cc47abbe323d49a7402e6d
+          name: 'Tempivo alert severity'
+          mappings:
+            - value: critical
+              newvalue: Critical
+            - value: high
+              newvalue: High
+            - value: medium
+              newvalue: Medium
+            - value: low
+              newvalue: Low
+            - value: unknown
+              newvalue: Unknown
+        - uuid: df635a3f31544e3cae6b54307e142a1f
+          name: 'Tempivo alert status'
+          mappings:
+            - value: new
+              newvalue: New
+            - value: assigned
+              newvalue: Assigned
+            - value: acknowledged
+              newvalue: Acknowledged
+            - value: resolved
+              newvalue: Resolved
+            - value: unknown
+              newvalue: Unknown
       macros:
         - macro: '{$TEMPIVO.API.BASEURL}'
           value: 'https://api.tempivo.com/v1'
