@@ -21,6 +21,15 @@ Template to pull **water and ambient temperature**, **humidity** (when enabled i
 
 No SNMP on devices. No agent on sensors. Zabbix server (or proxy) calls Tempivo REST API.
 
+### Host layout
+
+| Host | Role |
+|------|------|
+| **Organization host** (you create) | Links **Tempivo by HTTP**; polls `/assets` and `/alerts`; dashboards and org-wide items |
+| **Discovered asset hosts** (automatic) | One host per sensor via **host prototypes**; links **Tempivo asset by HTTP**; per-sensor graphs |
+
+Asset hosts appear under host group **Tempivo/assets** after discovery runs on the organization host.
+
 ## Prerequisites
 
 1. **API key** — Tempivo app → **Integrations** → generate key.
@@ -42,9 +51,10 @@ Follow [Importing templates](https://www.zabbix.com/documentation/current/en/man
 9. On the host, set macros (host-level overrides template defaults):
    - `{$TEMPIVO.API.BASEURL}` = `https://api.tempivo.com/v1`
    - `{$TEMPIVO.API.KEY}` = your `sk_live_…` key (use **Secret** macro type in the UI)
-10. Wait for discovery (up to 1 h) or **Execute now** on discovery rule *Tempivo assets*.
-11. **Monitoring → Latest data** — filter by `tempivo.asset` or `tempivo.alert`.
-12. Run discovery **Tempivo open alerts** if you need per-alert items immediately.
+10. Wait for discovery (up to 1 h) or **Execute now** on discovery rule *Tempivo assets* (creates per-asset items **and** per-asset hosts).
+11. **Data collection → Hosts** — filter group **Tempivo/assets** to see discovered sensor hosts.
+12. **Monitoring → Latest data** — organization host: `tempivo.asset` / `tempivo.alert`; asset host: `tempivo.asset.water_temp`, etc.
+13. Run discovery **Tempivo open alerts** if you need per-alert items immediately.
 
 ### Validate the YAML file
 
