@@ -3,13 +3,15 @@
 import json
 
 forbidden_names = [
-    '.github/',
     '.git/',
     '.gitignore',
     'docs/',
     'LICENSE',
     '.venv/'
 ]
+
+# CI lives under .github/workflows/; block other .github paths (e.g. outputs).
+allowed_github_prefix = '.github/workflows/'
 
 
 def run_check(skip: bool = False) -> dict:
@@ -32,6 +34,12 @@ def run_check(skip: bool = False) -> dict:
         changed_files = json.load(file_list)
 
     for file in changed_files:
+        if file.startswith('.github/') and not file.startswith(allowed_github_prefix):
+            return {
+                'step': step_name,
+                'status': 'fail',
+                'message': f'Changing path "{file}" is forbidden (only {allowed_github_prefix}* is allowed under .github/).'
+            }
         for name in forbidden_names:
             if file.startswith(name):
                 return {
