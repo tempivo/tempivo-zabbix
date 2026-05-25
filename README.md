@@ -1,6 +1,6 @@
 # Tempivo — Zabbix integration
 
-Import this template to pull **water temperature (°C)** and **asset status** from the [Tempivo](https://tempivo.com) REST API into Zabbix (alongside your other building sensors).
+Import this template to pull **water and ambient temperature**, **humidity** (when enabled), **asset status**, and **alerts** from the [Tempivo](https://tempivo.com) REST API into Zabbix (alongside your other building sensors).
 
 ## Quick start
 

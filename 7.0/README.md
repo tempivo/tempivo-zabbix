@@ -1,15 +1,21 @@
 # Tempivo by HTTP (Zabbix 7.0)
 
-Minimal template to pull **water temperature (°C)** from Tempivo into Zabbix so a property owner can see it **next to other building sensors** (HVAC, energy, access, and so on) in one monitoring stack.
+Template to pull **water and ambient temperature**, **humidity** (when enabled in Tempivo), and **alerts** into Zabbix alongside other building sensors.
 
-## What you get (v1)
+## What you get
 
 | Item | Meaning |
 |------|---------|
-| `Tempivo: Get assets (JSON)` | One HTTP poll every 5 minutes |
-| `Asset {name}: Water temperature` | `lastWaterTemperature` per sensor (LLD) |
+| `Tempivo: Get assets (JSON)` | HTTP poll every 5 minutes |
+| `Tempivo: Get alerts (JSON)` | HTTP poll every 5 minutes |
+| `Tempivo: Open alerts count` | Non-resolved alerts for the org |
+| `Asset {name}: Water temperature` | `lastWaterTemperature` (°C) |
+| `Asset {name}: Ambient temperature` | `lastAmbientTemperature` — **no data** if not enabled for the org/device |
+| `Asset {name}: Relative humidity` | `lastRelativeHumidity` (%) — **no data** if not enabled |
 | `Asset {name}: Status` | `online` / `offline` / `low_battery` / `alarm` |
-| Trigger | No API data for 30 minutes |
+| `Asset {name}: Open alerts` | Count of open alerts for that asset |
+| `Alert {type} [{id}]: …` | Per open alert: severity, status, details (LLD) |
+| Triggers | API nodata, org/asset open alerts, critical/high alert severity, asset offline |
 
 No SNMP on devices. No agent on sensors. Zabbix server (or proxy) calls Tempivo REST API.
 
@@ -35,11 +41,12 @@ Follow [Importing templates](https://www.zabbix.com/documentation/current/en/man
    - `{$TEMPIVO.API.BASEURL}` = `https://api.tempivo.com/v1`
    - `{$TEMPIVO.API.KEY}` = your `sk_live_…` key (use **Secret** macro type in the UI)
 10. Wait for discovery (up to 1 h) or **Execute now** on discovery rule *Tempivo assets*.
-11. **Monitoring → Latest data** — filter by `tempivo.asset.water_temp`.
+11. **Monitoring → Latest data** — filter by `tempivo.asset` or `tempivo.alert`.
+12. Run discovery **Tempivo open alerts** if you need per-alert items immediately.
 
 ### Validate the YAML file
 
-This file was written to match the [export format](https://www.zabbix.com/documentation/current/en/manual/xml_export_import/templates#export-format) (`zabbix_export`, `version`, UUIDs, template groups). It was **not** exported from a live Zabbix instance. If import fails, build the same logic in the UI on Zabbix 7.0+ and **Export → YAML**, then replace this file (that is the most reliable way to match the manual).
+This file follows the [Zabbix 7.0 export format](https://www.zabbix.com/documentation/7.0/en/manual/xml_export_import) and [community-templates](https://github.com/zabbix/community-templates/tree/main) conventions: no root `date` field, and **triggers nested under items** (not a template-level `triggers` block). If import fails, export a similar template from your Zabbix 7.0 UI and diff the YAML structure.
 
 ### Naming for other systems
 
@@ -53,18 +60,16 @@ Use clear **asset names** in Tempivo (building, floor, outlet). They appear as `
 
 (Zabbix must trust your dev TLS certificate.)
 
-## Limits (v1)
+## Limits
 
-- Single page: max **500** assets per poll. More than 500 → extend template later (cursor pagination).
-- Temperature only (not ambient/humidity unless add-on exposes them in API).
-- Poll interval **5 min** (adjust on master item if needed).
+- Single page: max **500** assets and **500** alerts per poll. Larger estates → extend with cursor pagination later.
+- Ambient temp and humidity items are created for every asset; values appear only when the API returns `lastAmbientTemperature` / `lastRelativeHumidity` (THT-class devices / org feature).
+- Poll interval **5 min** on master HTTP items (adjust if needed).
 
-## Roadmap (extend this template)
+## Roadmap
 
 - [ ] Pagination for large estates
 - [ ] `lastReadingAt` / stale-data triggers
-- [ ] Open alerts count (`GET /alerts`)
-- [ ] Ambient temp & humidity items
 - [ ] PR to [zabbix/community-templates](https://github.com/zabbix/community-templates)
 
 ## Other ways to integrate

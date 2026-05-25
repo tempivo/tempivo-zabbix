@@ -8,15 +8,19 @@ zabbix_export:
       template: 'Tempivo by HTTP'
       name: 'Tempivo by HTTP'
       description: |
-        Minimal Tempivo integration for building operators who already use Zabbix (or similar)
-        for other property sensors. Polls GET /assets and exposes one water temperature time
-        series per asset (lastWaterTemperature, °C).
+        Tempivo integration for building operators who already use Zabbix for other
+        property sensors. Polls GET /assets and GET /alerts every 5 minutes.
+
+        Per asset (LLD): water temperature, optional ambient temperature and relative
+        humidity (only when the org/device exposes lastAmbientTemperature /
+        lastRelativeHumidity — otherwise items stay in "no data"), status, open alert count.
+
+        Open alerts (non-resolved) are discovered for triggers and visibility.
 
         Setup: one Zabbix host = one Tempivo organization. Set macros {$TEMPIVO.API.BASEURL}
         and {$TEMPIVO.API.KEY} (from app → Integrations). Link this template to the host.
 
-        Requires an API key with permission to list assets (API integrations, Enterprise,
-        or Cellular API add-on). See integrations/zabbix/.../README.md.
+        Requires an API key with permission to list assets and alerts.
       groups:
         - name: Templates/Applications
       items:
@@ -28,7 +32,7 @@ zabbix_export:
           history: 1d
           trends: '0'
           value_type: TEXT
-          description: 'Master JSON from GET /assets?limit=500. Feeds discovery and temperatures.'
+          description: 'Master JSON from GET /assets?limit=500. Feeds asset discovery and dependent items.'
           url: '{$TEMPIVO.API.BASEURL}/assets?limit=500'
           request_method: GET
           headers:
@@ -40,6 +44,67 @@ zabbix_export:
           tags:
             - tag: component
               value: raw
+          triggers:
+            - uuid: f647908192a3b4c5d6e70612345
+              expression: 'nodata(/Tempivo by HTTP/tempivo.assets.get,30m)=1'
+              name: 'Tempivo: API data not received'
+              priority: HIGH
+              description: 'No asset JSON for 30 minutes. Check API key, add-on, URL macro, and HTTPS from Zabbix server.'
+        - uuid: b2c3d4e5f647908192a3b4c5d6e7111
+          name: 'Tempivo: Get alerts (JSON)'
+          type: HTTP_AGENT
+          key: tempivo.alerts.get
+          delay: 5m
+          history: 1d
+          trends: '0'
+          value_type: TEXT
+          description: 'Master JSON from GET /alerts?limit=500. Feeds alert discovery and open-alert counts.'
+          url: '{$TEMPIVO.API.BASEURL}/alerts?limit=500'
+          request_method: GET
+          headers:
+            - name: Authorization
+              value: 'Bearer {$TEMPIVO.API.KEY}'
+            - name: Accept
+              value: application/json
+          timeout: 30s
+          tags:
+            - tag: component
+              value: raw
+          triggers:
+            - uuid: f647908192a3b4c5d6e7061234d
+              expression: 'nodata(/Tempivo by HTTP/tempivo.alerts.get,30m)=1'
+              name: 'Tempivo: Alerts API data not received'
+              priority: WARNING
+              description: 'No alerts JSON for 30 minutes. Check API permissions and connectivity.'
+        - uuid: b2c3d4e5f647908192a3b4c5d6e7112
+          name: 'Tempivo: Open alerts count'
+          type: DEPENDENT
+          key: tempivo.alerts.open.count
+          delay: '0'
+          history: 30d
+          description: 'Number of alerts with status other than resolved (new, assigned, acknowledged).'
+          master_item:
+            key: tempivo.alerts.get
+          preprocessing:
+            - type: JAVASCRIPT
+              parameters:
+                - |
+                  var r = JSON.parse(value);
+                  var items = r.items || [];
+                  var n = 0;
+                  for (var i = 0; i < items.length; i++) {
+                    if (items[i] && items[i].status && items[i].status !== 'resolved') n++;
+                  }
+                  return String(n);
+          tags:
+            - tag: component
+              value: alerts
+          triggers:
+            - uuid: f647908192a3b4c5d6e7061234e
+              expression: 'last(/Tempivo by HTTP/tempivo.alerts.open.count)>0'
+              name: 'Tempivo: Open alert(s) in organization'
+              priority: HIGH
+              description: 'At least one non-resolved alert exists in this Tempivo organization.'
       discovery_rules:
         - uuid: c3d4e5f647908192a3b4c5d6e70312
           name: 'Tempivo assets'
@@ -96,6 +161,68 @@ zabbix_export:
               tags:
                 - tag: component
                   value: temperature
+            - uuid: d4e5f647908192a3b4c5d6e704124
+              name: 'Asset {#ASSETNAME}: Ambient temperature'
+              type: DEPENDENT
+              key: 'tempivo.asset.ambient_temp[{#ASSETID}]'
+              delay: '0'
+              history: 30d
+              value_type: FLOAT
+              units: C
+              description: |
+                Latest ambient air temperature (lastAmbientTemperature). Only populated for
+                orgs/devices with ambient sensing enabled; otherwise no data.
+              master_item:
+                key: tempivo.assets.get
+              preprocessing:
+                - type: JAVASCRIPT
+                  parameters:
+                    - |
+                      var data = JSON.parse(value);
+                      var id = '{#ASSETID}';
+                      var items = data.items || [];
+                      for (var i = 0; i < items.length; i++) {
+                        if (String(items[i].id) === id) {
+                          var t = items[i].lastAmbientTemperature;
+                          if (t === null || t === undefined) return null;
+                          return String(t);
+                        }
+                      }
+                      return null;
+              tags:
+                - tag: component
+                  value: ambient-temperature
+            - uuid: d4e5f647908192a3b4c5d6e704125
+              name: 'Asset {#ASSETNAME}: Relative humidity'
+              type: DEPENDENT
+              key: 'tempivo.asset.humidity[{#ASSETID}]'
+              delay: '0'
+              history: 30d
+              value_type: FLOAT
+              units: '%'
+              description: |
+                Latest relative humidity (lastRelativeHumidity). Only populated for
+                orgs/devices with humidity sensing enabled; otherwise no data.
+              master_item:
+                key: tempivo.assets.get
+              preprocessing:
+                - type: JAVASCRIPT
+                  parameters:
+                    - |
+                      var data = JSON.parse(value);
+                      var id = '{#ASSETID}';
+                      var items = data.items || [];
+                      for (var i = 0; i < items.length; i++) {
+                        if (String(items[i].id) === id) {
+                          var h = items[i].lastRelativeHumidity;
+                          if (h === null || h === undefined) return null;
+                          return String(h);
+                        }
+                      }
+                      return null;
+              tags:
+                - tag: component
+                  value: humidity
             - uuid: e5f647908192a3b4c5d6e7051234
               name: 'Asset {#ASSETNAME}: Status'
               type: DEPENDENT
@@ -123,12 +250,161 @@ zabbix_export:
               tags:
                 - tag: component
                   value: status
-      triggers:
-        - uuid: f647908192a3b4c5d6e70612345
-          expression: 'nodata(/Tempivo by HTTP/tempivo.assets.get,30m)=1'
-          name: 'Tempivo: API data not received'
-          priority: HIGH
-          description: 'No asset JSON for 30 minutes. Check API key, add-on, URL macro, and HTTPS from Zabbix server.'
+            - uuid: e5f647908192a3b4c5d6e7051235
+              name: 'Asset {#ASSETNAME}: Open alerts'
+              type: DEPENDENT
+              key: 'tempivo.asset.alerts.open[{#ASSETID}]'
+              delay: '0'
+              history: 30d
+              description: 'Count of non-resolved Tempivo alerts for this asset.'
+              master_item:
+                key: tempivo.alerts.get
+              preprocessing:
+                - type: JAVASCRIPT
+                  parameters:
+                    - |
+                      var data = JSON.parse(value);
+                      var id = '{#ASSETID}';
+                      var items = data.items || [];
+                      var n = 0;
+                      for (var i = 0; i < items.length; i++) {
+                        if (String(items[i].assetId) === id && items[i].status !== 'resolved') n++;
+                      }
+                      return String(n);
+              tags:
+                - tag: component
+                  value: alerts
+          trigger_prototypes:
+            - uuid: f647908192a3b4c5d6e70612346
+              expression: 'last(/Tempivo by HTTP/tempivo.asset.status[{#ASSETID}])="offline"'
+              name: 'Asset {#ASSETNAME}: Offline'
+              priority: WARNING
+              description: 'Tempivo reports this asset as offline.'
+            - uuid: f647908192a3b4c5d6e70612347
+              expression: 'last(/Tempivo by HTTP/tempivo.asset.alerts.open[{#ASSETID}])>0'
+              name: 'Asset {#ASSETNAME}: Open Tempivo alert(s)'
+              priority: HIGH
+              description: 'One or more non-resolved alerts exist for this asset in Tempivo.'
+        - uuid: c3d4e5f647908192a3b4c5d6e70313
+          name: 'Tempivo open alerts'
+          type: DEPENDENT
+          key: tempivo.alert.discovery
+          delay: 1h
+          description: 'Discover non-resolved alerts from GET /alerts.'
+          master_item:
+            key: tempivo.alerts.get
+          preprocessing:
+            - type: JAVASCRIPT
+              parameters:
+                - |
+                  var r = JSON.parse(value);
+                  var items = r.items || [];
+                  var lld = [];
+                  for (var i = 0; i < items.length; i++) {
+                    var a = items[i];
+                    if (!a || !a.id || a.status === 'resolved') continue;
+                    lld.push({
+                      '{#ALERTID}': String(a.id),
+                      '{#ASSETID}': String(a.assetId || ''),
+                      '{#ALERTTYPE}': String(a.type || 'unknown'),
+                      '{#SEVERITY}': String(a.severity || 'unknown'),
+                      '{#ALERTSTATUS}': String(a.status || 'unknown')
+                    });
+                  }
+                  return JSON.stringify(lld);
+          item_prototypes:
+            - uuid: f647908192a3b4c5d6e70612348
+              name: 'Alert {#ALERTTYPE} [{#ALERTID}]: Severity'
+              type: DEPENDENT
+              key: 'tempivo.alert.severity[{#ALERTID}]'
+              delay: '0'
+              history: 30d
+              trends: '0'
+              value_type: CHAR
+              description: 'Alert severity (critical, high, medium, low).'
+              master_item:
+                key: tempivo.alerts.get
+              preprocessing:
+                - type: JAVASCRIPT
+                  parameters:
+                    - |
+                      var data = JSON.parse(value);
+                      var id = '{#ALERTID}';
+                      var items = data.items || [];
+                      for (var i = 0; i < items.length; i++) {
+                        if (String(items[i].id) === id) {
+                          return String(items[i].severity || 'unknown');
+                        }
+                      }
+                      return 'unknown';
+              tags:
+                - tag: component
+                  value: alerts
+            - uuid: f647908192a3b4c5d6e70612349
+              name: 'Alert {#ALERTTYPE} [{#ALERTID}]: Status'
+              type: DEPENDENT
+              key: 'tempivo.alert.status[{#ALERTID}]'
+              delay: '0'
+              history: 30d
+              trends: '0'
+              value_type: CHAR
+              description: 'Alert workflow status (new, assigned, acknowledged, resolved).'
+              master_item:
+                key: tempivo.alerts.get
+              preprocessing:
+                - type: JAVASCRIPT
+                  parameters:
+                    - |
+                      var data = JSON.parse(value);
+                      var id = '{#ALERTID}';
+                      var items = data.items || [];
+                      for (var i = 0; i < items.length; i++) {
+                        if (String(items[i].id) === id) {
+                          return String(items[i].status || 'unknown');
+                        }
+                      }
+                      return 'unknown';
+              tags:
+                - tag: component
+                  value: alerts
+            - uuid: f647908192a3b4c5d6e7061234a
+              name: 'Alert {#ALERTTYPE} [{#ALERTID}]: Details'
+              type: DEPENDENT
+              key: 'tempivo.alert.details[{#ALERTID}]'
+              delay: '0'
+              history: 7d
+              trends: '0'
+              value_type: TEXT
+              description: 'Human-readable alert details from Tempivo.'
+              master_item:
+                key: tempivo.alerts.get
+              preprocessing:
+                - type: JAVASCRIPT
+                  parameters:
+                    - |
+                      var data = JSON.parse(value);
+                      var id = '{#ALERTID}';
+                      var items = data.items || [];
+                      for (var i = 0; i < items.length; i++) {
+                        if (String(items[i].id) === id) {
+                          return String(items[i].details || '');
+                        }
+                      }
+                      return '';
+              tags:
+                - tag: component
+                  value: alerts
+          trigger_prototypes:
+            - uuid: f647908192a3b4c5d6e7061234b
+              expression: 'last(/Tempivo by HTTP/tempivo.alert.severity[{#ALERTID}])="critical"'
+              name: 'Alert {#ALERTTYPE} [{#ALERTID}]: Critical severity'
+              priority: DISASTER
+              description: 'Tempivo alert with critical severity is open.'
+            - uuid: f647908192a3b4c5d6e7061234c
+              expression: 'last(/Tempivo by HTTP/tempivo.alert.severity[{#ALERTID}])="high"'
+              name: 'Alert {#ALERTTYPE} [{#ALERTID}]: High severity'
+              priority: HIGH
+              description: 'Tempivo alert with high severity is open.'
       macros:
         - macro: '{$TEMPIVO.API.BASEURL}'
           value: 'https://api.tempivo.com/v1'
