@@ -1,0 +1,140 @@
+zabbix_export:
+  version: '7.0'
+  date: '2026-05-25T12:00:00Z'
+  template_groups:
+    - uuid: f8e7d6c5b4a341209876543210abcd01
+      name: Templates/Applications
+  templates:
+    - uuid: a1b2c3d4e5f647908192a3b4c5d6e701
+      template: 'Tempivo by HTTP'
+      name: 'Tempivo by HTTP'
+      description: |
+        Minimal Tempivo integration for building operators who already use Zabbix (or similar)
+        for other property sensors. Polls GET /assets and exposes one water temperature time
+        series per asset (lastWaterTemperature, °C).
+
+        Setup: one Zabbix host = one Tempivo organization. Set macros {$TEMPIVO.API.BASEURL}
+        and {$TEMPIVO.API.KEY} (from app → Integrations). Link this template to the host.
+
+        Requires an API key with permission to list assets (API integrations, Enterprise,
+        or Cellular API add-on). See integrations/zabbix/.../README.md.
+      groups:
+        - name: Templates/Applications
+      items:
+        - uuid: b2c3d4e5f647908192a3b4c5d6e7021
+          name: 'Tempivo: Get assets (JSON)'
+          type: HTTP_AGENT
+          key: tempivo.assets.get
+          delay: 5m
+          history: 1d
+          trends: '0'
+          value_type: TEXT
+          description: 'Master JSON from GET /assets?limit=500. Feeds discovery and temperatures.'
+          url: '{$TEMPIVO.API.BASEURL}/assets?limit=500'
+          request_method: GET
+          headers:
+            - name: Authorization
+              value: 'Bearer {$TEMPIVO.API.KEY}'
+            - name: Accept
+              value: application/json
+          timeout: 30s
+          tags:
+            - tag: component
+              value: raw
+      discovery_rules:
+        - uuid: c3d4e5f647908192a3b4c5d6e70312
+          name: 'Tempivo assets'
+          type: DEPENDENT
+          key: tempivo.asset.discovery
+          delay: 1h
+          description: 'Discover non-archived assets from the assets list.'
+          master_item:
+            key: tempivo.assets.get
+          preprocessing:
+            - type: JAVASCRIPT
+              parameters:
+                - |
+                  var r = JSON.parse(value);
+                  var items = r.items || [];
+                  var lld = [];
+                  for (var i = 0; i < items.length; i++) {
+                    var a = items[i];
+                    if (!a || !a.id || a.status === 'archived') continue;
+                    lld.push({
+                      '{#ASSETID}': String(a.id),
+                      '{#ASSETNAME}': String(a.name || a.serialNumber || a.id),
+                      '{#SERIAL}': String(a.serialNumber || '')
+                    });
+                  }
+                  return JSON.stringify(lld);
+          item_prototypes:
+            - uuid: d4e5f647908192a3b4c5d6e704123
+              name: 'Asset {#ASSETNAME}: Water temperature'
+              type: DEPENDENT
+              key: 'tempivo.asset.water_temp[{#ASSETID}]'
+              delay: '0'
+              history: 30d
+              value_type: FLOAT
+              units: C
+              description: 'Latest water temperature (lastWaterTemperature) in degrees Celsius.'
+              master_item:
+                key: tempivo.assets.get
+              preprocessing:
+                - type: JAVASCRIPT
+                  parameters:
+                    - |
+                      var data = JSON.parse(value);
+                      var id = '{#ASSETID}';
+                      var items = data.items || [];
+                      for (var i = 0; i < items.length; i++) {
+                        if (String(items[i].id) === id) {
+                          var t = items[i].lastWaterTemperature;
+                          if (t === null || t === undefined) return null;
+                          return String(t);
+                        }
+                      }
+                      return null;
+              tags:
+                - tag: component
+                  value: temperature
+            - uuid: e5f647908192a3b4c5d6e7051234
+              name: 'Asset {#ASSETNAME}: Status'
+              type: DEPENDENT
+              key: 'tempivo.asset.status[{#ASSETID}]'
+              delay: '0'
+              history: 30d
+              trends: '0'
+              value_type: CHAR
+              description: 'online, offline, low_battery, or alarm.'
+              master_item:
+                key: tempivo.assets.get
+              preprocessing:
+                - type: JAVASCRIPT
+                  parameters:
+                    - |
+                      var data = JSON.parse(value);
+                      var id = '{#ASSETID}';
+                      var items = data.items || [];
+                      for (var i = 0; i < items.length; i++) {
+                        if (String(items[i].id) === id) {
+                          return String(items[i].status || 'unknown');
+                        }
+                      }
+                      return 'unknown';
+              tags:
+                - tag: component
+                  value: status
+      triggers:
+        - uuid: f647908192a3b4c5d6e70612345
+          expression: 'nodata(/Tempivo by HTTP/tempivo.assets.get,30m)=1'
+          name: 'Tempivo: API data not received'
+          priority: HIGH
+          description: 'No asset JSON for 30 minutes. Check API key, add-on, URL macro, and HTTPS from Zabbix server.'
+      macros:
+        - macro: '{$TEMPIVO.API.BASEURL}'
+          value: 'https://api.tempivo.com/v1'
+          description: 'API base URL without trailing slash.'
+        - macro: '{$TEMPIVO.API.KEY}'
+          type: SECRET_TEXT
+          value: ''
+          description: 'Bearer API key from Integrations (set on the host after import).'
