@@ -1,10 +1,10 @@
 zabbix_export:
   version: '7.0'
   template_groups:
-    - uuid: f8e7d6c5b4a341209876543210abcd01
+    - uuid: c90a122a60ac44b09ec00142f0adc577
       name: Templates/Applications
   templates:
-    - uuid: a1b2c3d4e5f647908192a3b4c5d6e701
+    - uuid: 31f3ac8963ae4a2dad4041ce913e16f5
       template: 'Tempivo by HTTP'
       name: 'Tempivo by HTTP'
       description: |
@@ -24,7 +24,7 @@ zabbix_export:
       groups:
         - name: Templates/Applications
       items:
-        - uuid: b2c3d4e5f647908192a3b4c5d6e7021
+        - uuid: 7e50cc3282334cefa4f6915d47c0c094
           name: 'Tempivo: Get assets (JSON)'
           type: HTTP_AGENT
           key: tempivo.assets.get
@@ -45,12 +45,12 @@ zabbix_export:
             - tag: component
               value: raw
           triggers:
-            - uuid: f647908192a3b4c5d6e70612345
+            - uuid: e66003fd653945779f32adca2af09f69
               expression: 'nodata(/Tempivo by HTTP/tempivo.assets.get,30m)=1'
               name: 'Tempivo: API data not received'
               priority: HIGH
               description: 'No asset JSON for 30 minutes. Check API key, add-on, URL macro, and HTTPS from Zabbix server.'
-        - uuid: b2c3d4e5f647908192a3b4c5d6e7111
+        - uuid: ae717f18ea464cec81f4ab3212850d82
           name: 'Tempivo: Get alerts (JSON)'
           type: HTTP_AGENT
           key: tempivo.alerts.get
@@ -71,12 +71,12 @@ zabbix_export:
             - tag: component
               value: raw
           triggers:
-            - uuid: f647908192a3b4c5d6e7061234d
+            - uuid: d8f4bd7f33ce455b8e4175ef3b3658fd
               expression: 'nodata(/Tempivo by HTTP/tempivo.alerts.get,30m)=1'
               name: 'Tempivo: Alerts API data not received'
               priority: WARNING
               description: 'No alerts JSON for 30 minutes. Check API permissions and connectivity.'
-        - uuid: b2c3d4e5f647908192a3b4c5d6e7112
+        - uuid: 78c3450f21b44f8fb82e8843399bdee8
           name: 'Tempivo: Open alerts count'
           type: DEPENDENT
           key: tempivo.alerts.open.count
@@ -100,13 +100,13 @@ zabbix_export:
             - tag: component
               value: alerts
           triggers:
-            - uuid: f647908192a3b4c5d6e7061234e
+            - uuid: 5375c0417cb14f868f9f359b87679f56
               expression: 'last(/Tempivo by HTTP/tempivo.alerts.open.count)>0'
               name: 'Tempivo: Open alert(s) in organization'
               priority: HIGH
               description: 'At least one non-resolved alert exists in this Tempivo organization.'
       discovery_rules:
-        - uuid: c3d4e5f647908192a3b4c5d6e70312
+        - uuid: 78710424e2ce4b6e820275ca9cdca585
           name: 'Tempivo assets'
           type: DEPENDENT
           key: tempivo.asset.discovery
@@ -132,7 +132,7 @@ zabbix_export:
                   }
                   return JSON.stringify(lld);
           item_prototypes:
-            - uuid: d4e5f647908192a3b4c5d6e704123
+            - uuid: 5ff833f389dc49e9a56120f2d1c14ee6
               name: 'Asset {#ASSETNAME}: Water temperature'
               type: DEPENDENT
               key: 'tempivo.asset.water_temp[{#ASSETID}]'
@@ -161,7 +161,7 @@ zabbix_export:
               tags:
                 - tag: component
                   value: temperature
-            - uuid: d4e5f647908192a3b4c5d6e704124
+            - uuid: a0135dedc7d74da0864531d68d55cef3
               name: 'Asset {#ASSETNAME}: Ambient temperature'
               type: DEPENDENT
               key: 'tempivo.asset.ambient_temp[{#ASSETID}]'
@@ -192,7 +192,7 @@ zabbix_export:
               tags:
                 - tag: component
                   value: ambient-temperature
-            - uuid: d4e5f647908192a3b4c5d6e704125
+            - uuid: cd78a15724a54d328f8afe73ff9e004e
               name: 'Asset {#ASSETNAME}: Relative humidity'
               type: DEPENDENT
               key: 'tempivo.asset.humidity[{#ASSETID}]'
@@ -223,7 +223,7 @@ zabbix_export:
               tags:
                 - tag: component
                   value: humidity
-            - uuid: e5f647908192a3b4c5d6e7051234
+            - uuid: 5282a8a885ca4c47927382916f94e8b5
               name: 'Asset {#ASSETNAME}: Status'
               type: DEPENDENT
               key: 'tempivo.asset.status[{#ASSETID}]'
@@ -250,7 +250,7 @@ zabbix_export:
               tags:
                 - tag: component
                   value: status
-            - uuid: e5f647908192a3b4c5d6e7051235
+            - uuid: 2764976b054840f5a4b87f2bbcee6543
               name: 'Asset {#ASSETNAME}: Open alerts'
               type: DEPENDENT
               key: 'tempivo.asset.alerts.open[{#ASSETID}]'
@@ -275,17 +275,17 @@ zabbix_export:
                 - tag: component
                   value: alerts
           trigger_prototypes:
-            - uuid: f647908192a3b4c5d6e70612346
+            - uuid: 434992f17028484a8e9479e87a1c43eb
               expression: 'last(/Tempivo by HTTP/tempivo.asset.status[{#ASSETID}])="offline"'
               name: 'Asset {#ASSETNAME}: Offline'
               priority: WARNING
               description: 'Tempivo reports this asset as offline.'
-            - uuid: f647908192a3b4c5d6e70612347
+            - uuid: e21396d37cc949beb4624157b52760f5
               expression: 'last(/Tempivo by HTTP/tempivo.asset.alerts.open[{#ASSETID}])>0'
               name: 'Asset {#ASSETNAME}: Open Tempivo alert(s)'
               priority: HIGH
               description: 'One or more non-resolved alerts exist for this asset in Tempivo.'
-        - uuid: c3d4e5f647908192a3b4c5d6e70313
+        - uuid: 0dc50606f75b481785837c8b5e23639a
           name: 'Tempivo open alerts'
           type: DEPENDENT
           key: tempivo.alert.discovery
@@ -313,7 +313,7 @@ zabbix_export:
                   }
                   return JSON.stringify(lld);
           item_prototypes:
-            - uuid: f647908192a3b4c5d6e70612348
+            - uuid: e019fa9e5ea3460884c2d56ba2e7494c
               name: 'Alert {#ALERTTYPE} [{#ALERTID}]: Severity'
               type: DEPENDENT
               key: 'tempivo.alert.severity[{#ALERTID}]'
@@ -340,7 +340,7 @@ zabbix_export:
               tags:
                 - tag: component
                   value: alerts
-            - uuid: f647908192a3b4c5d6e70612349
+            - uuid: 503a528c89d74ad2a5881f2b9ab56e8f
               name: 'Alert {#ALERTTYPE} [{#ALERTID}]: Status'
               type: DEPENDENT
               key: 'tempivo.alert.status[{#ALERTID}]'
@@ -367,7 +367,7 @@ zabbix_export:
               tags:
                 - tag: component
                   value: alerts
-            - uuid: f647908192a3b4c5d6e7061234a
+            - uuid: c42cfd6dad364251b204b8ee20949c5e
               name: 'Alert {#ALERTTYPE} [{#ALERTID}]: Details'
               type: DEPENDENT
               key: 'tempivo.alert.details[{#ALERTID}]'
@@ -395,12 +395,12 @@ zabbix_export:
                 - tag: component
                   value: alerts
           trigger_prototypes:
-            - uuid: f647908192a3b4c5d6e7061234b
+            - uuid: 6b235d33d97c4fce874d46826d4b4158
               expression: 'last(/Tempivo by HTTP/tempivo.alert.severity[{#ALERTID}])="critical"'
               name: 'Alert {#ALERTTYPE} [{#ALERTID}]: Critical severity'
               priority: DISASTER
               description: 'Tempivo alert with critical severity is open.'
-            - uuid: f647908192a3b4c5d6e7061234c
+            - uuid: a321c4cdfcc3444ba2656e1556e1a579
               expression: 'last(/Tempivo by HTTP/tempivo.alert.severity[{#ALERTID}])="high"'
               name: 'Alert {#ALERTTYPE} [{#ALERTID}]: High severity'
               priority: HIGH

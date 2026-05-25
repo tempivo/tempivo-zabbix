@@ -46,7 +46,7 @@ Follow [Importing templates](https://www.zabbix.com/documentation/current/en/man
 
 ### Validate the YAML file
 
-This file follows the [Zabbix 7.0 export format](https://www.zabbix.com/documentation/7.0/en/manual/xml_export_import) and [community-templates](https://github.com/zabbix/community-templates/tree/main) conventions: no root `date` field, and **triggers nested under items** (not a template-level `triggers` block). If import fails, export a similar template from your Zabbix 7.0 UI and diff the YAML structure.
+This file follows the [Zabbix 7.0 export format](https://www.zabbix.com/documentation/7.0/en/manual/xml_export_import) and [community-templates](https://github.com/zabbix/community-templates/tree/main) layout (`template_tempivo_api/7.0/`) and conventions: no root `date` field, and **triggers nested under items** (not a template-level `triggers` block). CI imports this YAML into Zabbix 7.0 on every PR (see `.github/workflows/review_pr.yaml`).
 
 ### Naming for other systems
 
