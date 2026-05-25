@@ -142,7 +142,7 @@ zabbix_export:
                 - group:
                     name: 'Discovered hosts'
               group_prototypes:
-                - name: 'Tempivo/assets'
+                - name: 'Tempivo/{#ASSETNAME}'
               templates:
                 - name: 'Tempivo asset by HTTP'
               macros:
