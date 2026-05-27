@@ -96,7 +96,7 @@ jobs:
           --health-retries 5
 
       zabbix-server_80:
-        image: zabbix/zabbix-server-pgsql:8.0-alpine-latest
+        image: zabbix/zabbix-server-pgsql:alpine-trunk
         env:
           DB_SERVER_HOST: postgres-server_80
           POSTGRES_DB: zabbix
@@ -104,7 +104,7 @@ jobs:
           POSTGRES_PASSWORD: zabbix
 
       zabbix-web_80:
-        image: zabbix/zabbix-web-nginx-pgsql:8.0-alpine-latest
+        image: zabbix/zabbix-web-nginx-pgsql:alpine-trunk
         ports:
           - "8080:8080"
         env:
