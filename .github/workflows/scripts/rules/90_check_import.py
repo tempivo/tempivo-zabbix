@@ -28,28 +28,19 @@ def run_check(skip: bool = False) -> dict:
             'message': ''
         }
 
-    # Tempivo templates target Zabbix 7.0 only (see template_tempivo_api/7.0/).
+  # Import each template_tempivo_api/X.Y/ file into the matching Zabbix version.
     instances = [
-        {
-            'port': '8070',
-            'ver': '7.0'
-        }
+        {'port': '8070', 'ver': '7.0'},
+        {'port': '8074', 'ver': '7.4'},
+        {'port': '8080', 'ver': '8.0'},
     ]
 
     def get_inst(zbx_ver):
-
-        inst_count = len(instances)
-
-        out = instances[inst_count - 1]['zbx']
-
-        for i in range(inst_count):
-
-            if float(zbx_ver) <= float(instances[inst_count - (i + 1)]['ver']):
-                out = instances[inst_count - (i + 1)]['zbx']
-            else:
-                return out
-
-        return out
+        ver = float(zbx_ver)
+        for inst in instances:
+            if ver <= float(inst['ver']):
+                return inst
+        return instances[-1]
 
     for i, inst in enumerate(instances):
         for x in range(10):
@@ -408,40 +399,31 @@ def run_check(skip: bool = False) -> dict:
                 }
                 """
                 }
+                json_data['8.0'] = json_data['7.4']
 
-                # path_list = Path(file).parts
-                # folder_ver = path_list[-2]
+                path_list = Path(file).parts
+                folder_ver = path_list[-2]
+                zabbix = get_inst(folder_ver)
 
-                last_error = ''
-                for zabbix in instances:
+                params = json.loads(json_data[zabbix['ver']])
+                with open(file, 'r', encoding='utf-8') as read_file_i:
+                    params['source'] = read_file_i.read()
 
-                    params = json.loads(json_data[zabbix['ver']])
-                    with open(file, 'r', encoding='utf-8') as read_file_i:
-                        params['source'] = read_file_i.read()
+                if file.endswith(('.yaml', '.YAML')):
+                    params['format'] = 'yaml'
+                elif file.endswith(('.json', '.JSON')):
+                    params['format'] = 'json'
+                elif file.endswith(('.xml', '.XML')):
+                    params['format'] = 'xml'
 
-                    if file.endswith(('.yaml', '.YAML')):
-                        params['format'] = 'yaml'
-                    elif file.endswith(('.json', '.JSON')):
-                        params['format'] = 'json'
-                    elif file.endswith(('.xml', '.XML')):
-                        params['format'] = 'xml'
-
-                    zapi = zabbix['zbx']
-                    # zapi = get_inst(folder_ver)
-                    try:
-                        response = zapi.send_api_request(
-                            'configuration.import', params)
-                        break
-                    except APIRequestError as error:
-                        last_error = error
-                        continue
-                else:
-                    # print(f'Import error... File: {file} Zabbix: {zapi.url} Data: {last_error}')
-                    # continue
+                zapi = zabbix['zbx']
+                try:
+                    zapi.send_api_request('configuration.import', params)
+                except APIRequestError as error:
                     return {
                         'step': step_name,
                         'status': 'fail',
-                        'message': f'Import error... File: {file} Zabbix: {zapi.url} Data: {last_error}'
+                        'message': f'Import error... File: {file} Zabbix: {zapi.url} Data: {error}'
                     }
 
         return {
