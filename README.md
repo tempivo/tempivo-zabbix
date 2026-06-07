@@ -17,7 +17,7 @@ Import this template to pull **water and ambient temperature**, **humidity** (wh
 
 Full steps: **[template_tempivo_api/7.0/README.md](template_tempivo_api/7.0/README.md)**.
 
-Pull requests import each version into Zabbix 7.0, 7.4, and 8.0 in CI (same checks as [zabbix/community-templates](https://github.com/zabbix/community-templates)).
+Pull requests import each version into Zabbix 7.0, 7.4, and 8.0 in CI. The [community-templates PR](https://github.com/zabbix/community-templates/pull/716) ships **7.0** and **7.4** only (upstream CI has no Zabbix 8.0 yet); **8.0** is maintained here.
 
 ## Requirements
 
